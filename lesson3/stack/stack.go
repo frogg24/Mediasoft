@@ -14,6 +14,9 @@ func NewStack[T any](size int) *Stack[T] {
 
 // push - добавление в стек значения
 func (s *Stack[T]) Push(v T) {
+	if s.head+2 > len(s.s) {
+		return
+	}
 	s.head++
 	s.s[s.head] = v
 }

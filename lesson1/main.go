@@ -70,8 +70,9 @@ func main() {
 				}
 			}
 		case 4:
-			for i := 0; i < 99; i++ {
-				for j := 0; j < 99-i; j++ {
+			len := len(arr) - 1
+			for i := 0; i < len; i++ {
+				for j := 0; j < len-i; j++ {
 
 					if arr[j] > arr[j+1] {
 						temp := arr[j]
