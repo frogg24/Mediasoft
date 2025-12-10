@@ -77,7 +77,14 @@ func Handler(ctx context.Context, conn net.Conn) {
 				continue
 			}
 
-			fmt.Fprintln(recipientConn, string(jsonMsgOut))
+			if err := writeMessage(recipientConn, string(jsonMsgOut)); err != nil {
+				// Remove disconnected client
+				mutex.Lock()
+				if clients[msgIn.To] == recipientConn { // Ensure it's still the same connection
+					delete(clients, msgIn.To)
+				}
+				mutex.Unlock()
+			}
 		} else {
 			errorMsg := api.MessageOut{
 				From: "Server",
@@ -107,4 +114,9 @@ func removeUser(username string) {
 	defer mutex.Unlock()
 
 	delete(clients, username)
+}
+
+func writeMessage(conn net.Conn, message string) error {
+	_, err := fmt.Fprintln(conn, message)
+	return err
 }

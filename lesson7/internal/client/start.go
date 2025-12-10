@@ -10,7 +10,6 @@ import (
 )
 
 func Start() {
-
 	conn, err := net.Dial("tcp", "localhost:8080")
 	if err != nil {
 		fmt.Println(err)
@@ -18,30 +17,64 @@ func Start() {
 	}
 	defer conn.Close()
 
+	scanner := bufio.NewScanner(conn)
+	if scanner.Scan() {
+		welcomeMsg := scanner.Text()
+		var serverMsg api.MessageOut
+		if err := json.Unmarshal([]byte(welcomeMsg), &serverMsg); err == nil {
+			fmt.Printf("Server: %s", serverMsg.Body)
+		} else {
+			fmt.Printf("%s", welcomeMsg)
+		}
+	}
+
+	inputScanner := bufio.NewScanner(os.Stdin)
+	if inputScanner.Scan() {
+		username := inputScanner.Text()
+
+		conn.Write([]byte(username + "\n"))
+
+		if scanner.Scan() {
+			response := scanner.Text()
+			var serverResponse api.MessageOut
+			if err := json.Unmarshal([]byte(response), &serverResponse); err == nil {
+				if serverResponse.From == "Server" &&
+					(len(serverResponse.Body) >= 7 && serverResponse.Body[:7] == "Здорово!") {
+
+					fmt.Printf("Server: %s", serverResponse.Body)
+				} else if serverResponse.From == "Server" &&
+					len(serverResponse.Body) >= 13 &&
+					serverResponse.Body[:13] == "Ошибка: ник '" {
+
+					fmt.Printf("Server: %s\n", serverResponse.Body)
+					return
+				} else {
+
+					fmt.Printf("Server: %s\n", serverResponse.Body)
+				}
+			} else {
+
+				fmt.Printf("Server: %s\n", response)
+			}
+		}
+	} else {
+		return
+	}
+
 	go func() {
-		scanner := bufio.NewScanner(conn)
 		for scanner.Scan() {
-			var message = new(api.MessageOut)
 
 			text := scanner.Text()
+			var message = new(api.MessageOut)
 
 			err := json.Unmarshal([]byte(text), message)
 			if err != nil {
 				fmt.Printf("System message: %s\n", text)
-
 				continue
 			}
 			fmt.Printf("Message from %s: %s\n", message.From, message.Body)
 		}
 	}()
-
-	inputScanner := bufio.NewScanner(os.Stdin)
-
-	if inputScanner.Scan() {
-		conn.Write([]byte(inputScanner.Text() + "\n"))
-	} else {
-		return
-	}
 
 	fmt.Println("Type message to send, 'exit' to quit:")
 	for {
