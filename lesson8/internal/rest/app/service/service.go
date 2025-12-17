@@ -49,10 +49,10 @@ func (s *Service) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 type GetResponse struct {
-	ID       int64  `json: "id"`
-	Name     string `json: "name"`
-	Surname  string `json: "surname"`
-	Position string `json: "position"`
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	Surname  string `json:"surname"`
+	Position string `json:"position"`
 }
 
 func (s *Service) Get(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +75,7 @@ func (s *Service) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 type GetAllResponse struct {
-	Results []GetResponse `json: "results"`
+	Results []GetResponse `json:"results"`
 }
 
 func (s *Service) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -99,9 +99,9 @@ func (s *Service) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 type UpdateResponse struct {
-	Name     string `json: "name"`
-	Surname  string `json: "surname"`
-	Position string `json: "position"`
+	Name     string `json:"name"`
+	Surname  string `json:"surname"`
+	Position string `json:"position"`
 }
 
 func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
