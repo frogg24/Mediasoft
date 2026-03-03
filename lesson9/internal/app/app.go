@@ -33,10 +33,10 @@ func Run(cfg *config.Config) error {
 	router.HandleFunc("GET /groups/{id}", groupService.Get)
 	router.HandleFunc("PUT /groups/{id}", groupService.Update)
 	router.HandleFunc("DELETE /groups/{id}", groupService.Delete)
-	router.HandleFunc("Get /groupspersons/{id}", groupService.ListPersonLocal)
-	router.HandleFunc("Get /allgroupspersons/{id}", groupService.ListPersonAll)
-	router.HandleFunc("Get /countgroupspersons/{id}", groupService.CountGroupLocal)
-	router.HandleFunc("Get /countallgroupspersons/{id}", groupService.CountGroupAll)
+	router.HandleFunc("GET /groupspersons/{id}", groupService.ListPersonLocal)
+	router.HandleFunc("GET /allgroupspersons/{id}", groupService.ListPersonAll)
+	router.HandleFunc("GET /countgroupspersons/{id}", groupService.CountGroupLocal)
+	router.HandleFunc("GET /countallgroupspersons/{id}", groupService.CountGroupAll)
 
 	srv := http.Server{
 		Addr:    cfg.Port,
