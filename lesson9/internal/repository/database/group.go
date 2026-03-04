@@ -85,7 +85,7 @@ func (db *DB) ListPersonAll(ctx context.Context, groupID int64) ([]model.Person,
 
 			SELECT g.id
 			FROM groups g
-			INNER JOIN subgroups sg ON g.parent_id = sg.id
+			INNER JOIN subgroups sg ON g.parentgroup = sg.id
 		)
 		SELECT p.id, p.name, p.lastname, p.birthdate, p.groupid
 		FROM persons p
@@ -125,7 +125,7 @@ func (db *DB) CountGroupLocal(ctx context.Context, groupid int64) (int64, error)
 	const q = `
 		SELECT COUNT(*) 
 		FROM persons 
-		WHERE group_id = $1;
+		WHERE groupid = $1;
 	`
 
 	var count int64
@@ -144,11 +144,11 @@ func (db *DB) CountGroupAll(ctx context.Context, groupid int64) (int64, error) {
 
 			SELECT g.id
 			FROM groups g
-			INNER JOIN subgroups sg ON g.parent_id = sg.id
+			INNER JOIN subgroups sg ON g.parentgroup = sg.id
 		)
 		SELECT COUNT(*)
 		FROM persons
-		WHERE group_id IN (SELECT id FROM subgroups);
+		WHERE groupid IN (SELECT id FROM subgroups);
 	`
 
 	var count int64
