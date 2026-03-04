@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"log"
 	"mediasoft/lesson9/internal/model"
 )
 
@@ -153,4 +154,37 @@ func (db *DB) CountGroupAll(ctx context.Context, groupid int64) (int64, error) {
 	var count int64
 	err := db.QueryRowContext(ctx, q, groupid).Scan(&count)
 	return count, err
+}
+
+func (db *DB) GetAllGroups(ctx context.Context) ([]model.Group, error) {
+	log.Println("GetAllGroups in database")
+
+	const q = `
+		SELECT * FROM groups;
+	`
+	rows, err := db.QueryContext(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	groups := make([]model.Group, 0, 16)
+	for rows.Next() {
+		var group model.Group
+		if err := rows.Scan(
+			&group.ID,
+			&group.Title,
+			&group.ParentGroup,
+		); err != nil {
+			return nil, err
+		}
+
+		groups = append(groups, group)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return groups, nil
 }

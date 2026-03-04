@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"mediasoft/lesson9/internal/model"
 	"mediasoft/lesson9/internal/repository"
 	"net/http"
@@ -46,6 +47,7 @@ func (s *GroupService) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *GroupService) Get(w http.ResponseWriter, r *http.Request) {
+	log.Println("METHOD:", r.Method, "PATH:", r.URL.Path)
 	idString := r.PathValue("id")
 	id, err := strconv.Atoi(idString)
 	if err != nil {
@@ -181,4 +183,16 @@ func (s *GroupService) CountGroupAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response(w, http.StatusOK, map[string]int64{"count": count})
+}
+
+func (s *GroupService) GetAllGroups(w http.ResponseWriter, r *http.Request) {
+	log.Println("METHOD:", r.Method, "PATH:", r.URL.Path)
+
+	groups, err := s.group.GetAllGroups(r.Context())
+	if err != nil {
+		responseError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	response(w, http.StatusOK, map[string][]model.Group{"results": groups})
 }

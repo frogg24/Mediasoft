@@ -30,6 +30,7 @@ func Run(cfg *config.Config) error {
 	router.HandleFunc("DELETE /persons/{id}", personService.Delete)
 
 	router.HandleFunc("POST /groups", groupService.Create)
+	router.HandleFunc("GET /groups", groupService.GetAllGroups)
 	router.HandleFunc("GET /groups/{id}", groupService.Get)
 	router.HandleFunc("PUT /groups/{id}", groupService.Update)
 	router.HandleFunc("DELETE /groups/{id}", groupService.Delete)

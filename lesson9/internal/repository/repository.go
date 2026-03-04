@@ -17,6 +17,7 @@ type GroupRepository interface {
 	ReadGroup(ctx context.Context, groupid int64) (model.Group, error)
 	UpdateGroup(ctx context.Context, group model.Group) error
 	DeleteGroup(ctx context.Context, groupid int64) error
+	GetAllGroups(ctx context.Context) ([]model.Group, error)
 
 	ListPersonLocal(ctx context.Context, groupid int64) ([]model.Person, error)
 	ListPersonAll(ctx context.Context, groupid int64) ([]model.Person, error)
