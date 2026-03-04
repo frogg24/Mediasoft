@@ -10,6 +10,7 @@ type PersonRepository interface {
 	ReadPerson(ctx context.Context, personid int64) (model.Person, error)
 	UpdatePerson(ctx context.Context, person model.Person) error
 	DeletePerson(ctx context.Context, personid int64) error
+	GetAllPersons(ctx context.Context) ([]model.Person, error)
 }
 
 type GroupRepository interface {

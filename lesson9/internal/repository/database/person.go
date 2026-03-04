@@ -29,6 +29,39 @@ func (db *DB) ReadPerson(ctx context.Context, id int64) (model.Person, error) {
 	)
 }
 
+func (db *DB) GetAllPersons(ctx context.Context) ([]model.Person, error) {
+	const q = `
+		select id, name, lastname, birthdate, groupid from persons;
+	`
+	rows, err := db.QueryContext(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	persons := make([]model.Person, 0, 16)
+	for rows.Next() {
+		var person model.Person
+		if err := rows.Scan(
+			&person.ID,
+			&person.Name,
+			&person.Lastname,
+			&person.Birthdate,
+			&person.GroupID,
+		); err != nil {
+			return nil, err
+		}
+
+		persons = append(persons, person)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return persons, nil
+}
+
 func (db *DB) UpdatePerson(ctx context.Context, person model.Person) error {
 	const q = `
 		update persons set name = $1, lastname = $2, birthdate = $3, groupid = $4 where id = $5;

@@ -30,7 +30,7 @@ func (db *DB) ReadGroup(ctx context.Context, id int64) (model.Group, error) {
 
 func (db *DB) UpdateGroup(ctx context.Context, group model.Group) error {
 	const q = `
-		update groups set title = $1, parentgroup = $2, where id = $3;
+		update groups set title = $1, parentgroup = $2 where id = $3;
 	`
 
 	_, err := db.ExecContext(ctx, q, group.Title, group.ParentGroup, group.ID)
@@ -160,7 +160,7 @@ func (db *DB) GetAllGroups(ctx context.Context) ([]model.Group, error) {
 	log.Println("GetAllGroups in database")
 
 	const q = `
-		SELECT * FROM groups;
+		SELECT id, title, parentgroup FROM groups;
 	`
 	rows, err := db.QueryContext(ctx, q)
 	if err != nil {

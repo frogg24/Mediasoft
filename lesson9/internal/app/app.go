@@ -26,6 +26,7 @@ func Run(cfg *config.Config) error {
 	router := http.NewServeMux()
 	router.HandleFunc("POST /persons", personService.Create)
 	router.HandleFunc("GET /persons/{id}", personService.Get)
+	router.HandleFunc("GET /persons", personService.GetAllPersons)
 	router.HandleFunc("PUT /persons/{id}", personService.Update)
 	router.HandleFunc("DELETE /persons/{id}", personService.Delete)
 

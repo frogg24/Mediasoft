@@ -25,7 +25,7 @@ func NewPersonService(person repository.PersonRepository) *PersonService {
 type CreatePersonRequest struct {
 	Name      string    `json:"name"`
 	Lastname  string    `json:"lastname"`
-	Birthdate time.Time `json:"birthday"`
+	Birthdate time.Time `json:"birthdate"`
 	GroupID   int64     `json:"groupid"`
 }
 
@@ -70,34 +70,20 @@ func (s *PersonService) Get(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// type GetAllResponse struct {
-// 	Results []GetResponse `json:"results"`
-// }
+func (s *PersonService) GetAllPersons(w http.ResponseWriter, r *http.Request) {
+	persons, err := s.person.GetAllPersons(r.Context())
+	if err != nil {
+		responseError(w, http.StatusInternalServerError, err)
+		return
+	}
 
-// func (s *Service) GetAll(w http.ResponseWriter, r *http.Request) {
-// 	employees, err := s.person.List(r.Context())
-// 	if err != nil {
-// 		responseError(w, http.StatusInternalServerError, err)
-// 		return
-// 	}
-// 	result := make([]GetResponse, len(employees))
-// 	for i, employee := range employees {
-// 		result[i] = GetResponse{
-// 			ID:       employee.ID,
-// 			Name:     employee.Name,
-// 			Surname:  employee.Surname,
-// 			Position: employee.Position,
-// 		}
-// 	}
-// 	response(w, http.StatusOK, GetAllResponse{
-// 		Results: result,
-// 	})
-// }
+	response(w, http.StatusOK, map[string][]model.Person{"results": persons})
+}
 
 type UpdatePersonResponse struct {
 	Name      string    `json:"name"`
 	Lastname  string    `json:"lastname"`
-	Birthdate time.Time `json:"birthday"`
+	Birthdate time.Time `json:"birthdate"`
 	GroupID   int64     `json:"groupid"`
 }
 
