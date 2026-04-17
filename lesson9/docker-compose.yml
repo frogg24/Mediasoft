@@ -10,8 +10,25 @@ services:
       POSTGRES_USER: db
       POSTGRES_PASSWORD: db
       POSTGRES_DB: test_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U db -d test_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    image: migrate/migrate
     volumes:
-      - ./migrations:/docker-entrypoint-initdb.d
+      - ./migrations:/migrations
+    command:
+      [
+        "-path=/migrations",
+        "-database=postgres://db:db@test_db:5432/test_db?sslmode=disable",
+        "up"
+      ]
+    depends_on:
+      test_db:
+        condition: service_healthy
 
   app:
     build: .
@@ -22,4 +39,5 @@ services:
       DATABASE_URL: postgres://db:db@test_db:5432/test_db?sslmode=disable
       PORT: :8080
     depends_on:
-      - test_db 
+      migrate:
+        condition: service_completed_successfully

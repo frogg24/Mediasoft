@@ -24,21 +24,21 @@ func Run(cfg *config.Config) error {
 	groupService := service.NewGroupService(dbWrapper)
 
 	router := http.NewServeMux()
-	router.HandleFunc("POST /persons", personService.Create)        //работает
-	router.HandleFunc("GET /persons/{id}", personService.Get)       //работает
-	router.HandleFunc("GET /persons", personService.GetAllPersons)  //работает
-	router.HandleFunc("PUT /persons/{id}", personService.Update)    //работает
-	router.HandleFunc("DELETE /persons/{id}", personService.Delete) //работает
+	router.HandleFunc("POST /persons", personService.Create)        //создание человека
+	router.HandleFunc("GET /persons/{id}", personService.Get)       //получение человека по индификатору
+	router.HandleFunc("GET /persons", personService.GetAllPersons)  //получение списка всех людей
+	router.HandleFunc("PUT /persons/{id}", personService.Update)    //редактирование человека
+	router.HandleFunc("DELETE /persons/{id}", personService.Delete) //удаление человека
 
-	router.HandleFunc("POST /groups", groupService.Create)                           //работает
-	router.HandleFunc("GET /groups", groupService.GetAllGroups)                      //работает
-	router.HandleFunc("GET /groups/{id}", groupService.Get)                          //работает
-	router.HandleFunc("PUT /groups/{id}", groupService.Update)                       //работает
-	router.HandleFunc("DELETE /groups/{id}", groupService.Delete)                    //работает
-	router.HandleFunc("GET /groupspersons/{id}", groupService.ListPersonLocal)       //работает
-	router.HandleFunc("GET /allgroupspersons/{id}", groupService.ListPersonAll)      //работает
-	router.HandleFunc("GET /countgroupspersons/{id}", groupService.CountGroupLocal)  //работает
-	router.HandleFunc("GET /countallgroupspersons/{id}", groupService.CountGroupAll) //работает
+	router.HandleFunc("POST /groups", groupService.Create)                           //создание группы
+	router.HandleFunc("GET /groups", groupService.GetAllGroups)                      //получение списка групп
+	router.HandleFunc("GET /groups/{id}", groupService.Get)                          //получение группы по индификатору
+	router.HandleFunc("PUT /groups/{id}", groupService.Update)                       //редактирование группы
+	router.HandleFunc("DELETE /groups/{id}", groupService.Delete)                    //удаление группы
+	router.HandleFunc("GET /groupspersons/{id}", groupService.ListPersonLocal)       //получение списка посльзователей группы по индификатору
+	router.HandleFunc("GET /allgroupspersons/{id}", groupService.ListPersonAll)      //получение списка посльзователей группы по индификатору (включая дочерние)
+	router.HandleFunc("GET /countgroupspersons/{id}", groupService.CountGroupLocal)  //получение количества человек в группе по индификатору
+	router.HandleFunc("GET /countallgroupspersons/{id}", groupService.CountGroupAll) //получение количества человек в группе по индификатору (включая дочерние)
 
 	srv := http.Server{
 		Addr:    cfg.Port,
