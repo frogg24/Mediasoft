@@ -4,9 +4,20 @@ import (
 	"context"
 	"log"
 	"mediasoft/lesson9/internal/model"
+	"mediasoft/lesson9/internal/repository"
 )
 
 func (db *DB) CreateGroup(ctx context.Context, group model.Group) error {
+	if group.ParentGroup != nil {
+		parentExists, err := db.groupExists(ctx, *group.ParentGroup)
+		if err != nil {
+			return err
+		}
+		if !parentExists {
+			return repository.ErrGroupNotFound
+		}
+	}
+
 	const q = `
 		insert into groups (title, parentgroup) values ($1, $2);
 	`
@@ -29,20 +40,121 @@ func (db *DB) ReadGroup(ctx context.Context, id int64) (model.Group, error) {
 }
 
 func (db *DB) UpdateGroup(ctx context.Context, group model.Group) error {
+	groupExists, err := db.groupExists(ctx, group.ID)
+	if err != nil {
+		return err
+	}
+	if !groupExists {
+		return repository.ErrNotFound
+	}
+
+	if group.ParentGroup != nil {
+		if *group.ParentGroup == group.ID {
+			return repository.ErrGroupCycle
+		}
+
+		parentExists, err := db.groupExists(ctx, *group.ParentGroup)
+		if err != nil {
+			return err
+		}
+		if !parentExists {
+			return repository.ErrGroupNotFound
+		}
+
+		isDescendant, err := db.isGroupDescendant(ctx, group.ID, *group.ParentGroup)
+		if err != nil {
+			return err
+		}
+		if isDescendant {
+			return repository.ErrGroupCycle
+		}
+	}
+
 	const q = `
 		update groups set title = $1, parentgroup = $2 where id = $3;
 	`
 
-	_, err := db.ExecContext(ctx, q, group.Title, group.ParentGroup, group.ID)
-	return err
+	result, err := db.ExecContext(ctx, q, group.Title, group.ParentGroup, group.ID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return repository.ErrNotFound
+	}
+
+	return nil
+
 }
 
 func (db *DB) DeleteGroup(ctx context.Context, id int64) error {
-	const q = `
-		delete from groups where id = $1;
+	groupExists, err := db.groupExists(ctx, id)
+	if err != nil {
+		return err
+	}
+	if !groupExists {
+		return repository.ErrNotFound
+	}
+
+	const childGroupsQ = `
+		SELECT EXISTS(
+			SELECT 1
+			FROM groups
+			WHERE parentgroup = $1
+		);
 	`
-	_, err := db.ExecContext(ctx, q, id)
-	return err
+
+	var hasChildren bool
+	if err := db.QueryRowContext(ctx, childGroupsQ, id).Scan(&hasChildren); err != nil {
+		return err
+	}
+
+	if hasChildren {
+		return repository.ErrGroupHasChildren
+	}
+
+	const personsQ = `
+		SELECT EXISTS(
+			SELECT 1
+			FROM persons
+			WHERE groupid = $1
+		);
+	`
+
+	var hasPersons bool
+	if err := db.QueryRowContext(ctx, personsQ, id).Scan(&hasPersons); err != nil {
+		return err
+	}
+
+	if hasPersons {
+		return repository.ErrGroupHasPersons
+	}
+
+	const deleteQ = `
+		DELETE FROM groups
+		WHERE id = $1;
+	`
+
+	result, err := db.ExecContext(ctx, deleteQ, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return repository.ErrNotFound
+	}
+
+	return nil
 }
 
 func (db *DB) ListPersonLocal(ctx context.Context, id int64) ([]model.Person, error) {
@@ -187,4 +299,43 @@ func (db *DB) GetAllGroups(ctx context.Context) ([]model.Group, error) {
 	}
 
 	return groups, nil
+}
+
+func (db *DB) groupExists(ctx context.Context, id int64) (bool, error) {
+	const q = `
+		SELECT EXISTS(
+			SELECT 1
+			FROM groups
+			WHERE id = $1
+		);
+	`
+
+	var exists bool
+	err := db.QueryRowContext(ctx, q, id).Scan(&exists)
+	return exists, err
+}
+
+func (db *DB) isGroupDescendant(ctx context.Context, groupID int64, possibleDescendantID int64) (bool, error) {
+	const q = `
+		WITH RECURSIVE descendants AS (
+			SELECT id
+			FROM groups
+			WHERE parentgroup = $1
+
+			UNION
+
+			SELECT g.id
+			FROM groups g
+			INNER JOIN descendants d ON g.parentgroup = d.id
+		)
+		SELECT EXISTS(
+			SELECT 1
+			FROM descendants
+			WHERE id = $2
+		);
+	`
+
+	var exists bool
+	err := db.QueryRowContext(ctx, q, groupID, possibleDescendantID).Scan(&exists)
+	return exists, err
 }

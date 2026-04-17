@@ -43,7 +43,7 @@ func (s *PersonService) Create(w http.ResponseWriter, r *http.Request) {
 		Birthdate: req.Birthdate,
 		GroupID:   req.GroupID,
 	}); err != nil {
-		responseError(w, http.StatusInternalServerError, err)
+		responseRepositoryError(w, err)
 		return
 	}
 
@@ -64,16 +64,16 @@ func (s *PersonService) Get(w http.ResponseWriter, r *http.Request) {
 	case err == nil:
 		response(w, http.StatusOK, person)
 	case errors.Is(err, sql.ErrNoRows):
-		responseError(w, http.StatusNotFound, err)
+		responseRepositoryError(w, err)
 	default:
-		responseError(w, http.StatusInternalServerError, err)
+		responseRepositoryError(w, err)
 	}
 }
 
 func (s *PersonService) GetAllPersons(w http.ResponseWriter, r *http.Request) {
 	persons, err := s.person.GetAllPersons(r.Context())
 	if err != nil {
-		responseError(w, http.StatusInternalServerError, err)
+		responseRepositoryError(w, err)
 		return
 	}
 
@@ -108,7 +108,7 @@ func (s *PersonService) Update(w http.ResponseWriter, r *http.Request) {
 		Birthdate: req.Birthdate,
 		GroupID:   req.GroupID,
 	}); err != nil {
-		responseError(w, http.StatusInternalServerError, err)
+		responseRepositoryError(w, err)
 		return
 	}
 
@@ -128,7 +128,7 @@ func (s *PersonService) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.person.DeletePerson(r.Context(), int64(id)); err != nil {
-		responseError(w, http.StatusInternalServerError, err)
+		responseRepositoryError(w, err)
 		return
 	}
 
@@ -148,4 +148,26 @@ func response(w http.ResponseWriter, code int, data any) {
 
 func responseError(w http.ResponseWriter, code int, err error) {
 	response(w, code, map[string]string{"error:": err.Error()})
+}
+
+func responseRepositoryError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, repository.ErrNotFound):
+		responseError(w, http.StatusNotFound, err)
+
+	case errors.Is(err, repository.ErrGroupNotFound):
+		responseError(w, http.StatusNotFound, err)
+
+	case errors.Is(err, repository.ErrGroupHasChildren):
+		responseError(w, http.StatusConflict, err)
+
+	case errors.Is(err, repository.ErrGroupHasPersons):
+		responseError(w, http.StatusConflict, err)
+
+	case errors.Is(err, repository.ErrGroupCycle):
+		responseError(w, http.StatusBadRequest, err)
+
+	default:
+		responseError(w, http.StatusInternalServerError, err)
+	}
 }

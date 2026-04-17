@@ -1,7 +1,7 @@
 CREATE TABLE groups (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
-    parentgroup INT REFERENCES groups(id)
+    parentgroup INT REFERENCES groups(id) ON DELETE RESTRICT
 );
 
 CREATE TABLE persons (
@@ -9,5 +9,5 @@ CREATE TABLE persons (
     name TEXT NOT NULL,
     lastname TEXT NOT NULL,
     birthdate DATE NOT NULL,
-    groupid INT REFERENCES groups(id)
+    groupid INT NOT NULL REFERENCES groups(id)
 );
